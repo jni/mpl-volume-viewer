@@ -4,9 +4,9 @@ def process_key(event):
     fig = event.canvas.figure
     ax = event.inaxes or fig.axes[0]
     volume = ax.volume
-    if event.key == 'down' or event.key == 'left':
+    if event.key == 'down' or event.key == 'j':
         shift = -1
-    elif event.key == 'up' or event.key == 'right':
+    elif event.key == 'up' or event.key == 'k':
         shift = 1
     ax.index = (ax.index + shift) % volume.shape[0]
     ax.images[0].set_array(volume[ax.index])
