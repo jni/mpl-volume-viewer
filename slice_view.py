@@ -43,6 +43,7 @@ def process_key(event):
 def slice_view(volume, cmap=plt.cm.gray,
                points=None, pts_depth=2, pts_color='red',
                labels=None, labels_cmap='random'):
+    remove_keymap_conflicts()
     fig, ax = plt.subplots()
     ax.volume = volume
     ax.points = None
@@ -84,3 +85,15 @@ KEYMAP = {
     'k': _dscroll,
     'f': _toggle_overlay,
 }
+
+# Remove conflicting keys in default keymap
+def remove_keymap_conflicts():
+    for prop in plt.rcParams:
+        if prop.startswith('keymap.'):
+            keys = plt.rcParams[prop]
+            remove_list = []
+            for key in keys:
+                if key in KEYMAP:
+                    remove_list.append(key)
+            for key in remove_list:
+                keys.remove(key)
