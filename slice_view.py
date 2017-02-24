@@ -2,26 +2,29 @@ import numpy as np
 from matplotlib import pyplot as plt
 
 
+
+
 def _random_cmap(n=256):
     # to do: make this really map random colours
     return plt.cm.Spectral(n)
 
 
-def _dscroll(key, axes):
-    volume = axes.volume
+def _dscroll(event, fig, ax):
+    key = event.key
+    volume = ax.volume
     if key == 'down' or key == 'j':
         shift = -1
     elif key == 'up' or key == 'k':
         shift = 1
-    axes.index = (axes.index + shift) % volume.shape[0]
-    axes.images[0].set_array(volume[axes.index])
-    if hasattr(axes, 'overlay'):
-        axes.images[1].set_array(axes.overlay[axes.index])
-    if axes.points is not None:
-        update_points(axes)
+    ax.index = (ax.index + shift) % volume.shape[0]
+    ax.images[0].set_array(volume[ax.index])
+    if hasattr(ax, 'overlay'):
+        ax.images[1].set_array(ax.overlay[ax.index])
+    if ax.points is not None:
+        update_points(ax)
 
 
-def _toggle_overlay(ax):
+def _toggle_overlay(event, fig, ax):
     if ax.overlay is not None:
         ax = ax.images[1]
         temp = ax.get_alpha()
@@ -32,10 +35,8 @@ def _toggle_overlay(ax):
 def process_key(event):
     fig = event.canvas.figure
     ax = event.inaxes or fig.axes[0]
-    if event.key in ['up', 'down', 'j', 'k']:
-        _dscroll(event.key, ax)
-    elif event.key == 'f':
-        _toggle_overlay(ax)
+    f = KEYMAP[event.key]
+    f(event, fig, ax)
     fig.canvas.draw()
 
 
@@ -74,3 +75,12 @@ def update_points(axes):
     alpha = np.maximum(0, 1 - np.abs(pln - axes.index) / axes.pts_depth)
     for pt, a in zip(axes.drawn_points, alpha):
         pt.set_alpha(a)
+
+
+KEYMAP = {
+    'down': _dscroll,
+    'up': _dscroll,
+    'j': _dscroll,
+    'k': _dscroll,
+    'f': _toggle_overlay,
+}
