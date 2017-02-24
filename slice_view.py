@@ -64,18 +64,31 @@ def slice_view(volume, cmap=plt.cm.gray,
 
 
 def draw_points(axes):
+    size = plt.rcParams['lines.markersize'] ** 2
     pln, row, col = axes.points
+    distance = np.abs(pln - axes.index)
+    distance_nonlin = np.clip(distance - 0.5, 0, axes.pts_depth - 0.5)
+    apparent_position = (np.sign(pln - axes.index) * distance_nonlin /
+                         axes.pts_depth)  # between -1 and 1
+    sizes = size * (1 + apparent_position**3)
     alpha = np.maximum(0, 1 - np.abs(pln - axes.index) / axes.pts_depth)
     points_collection = [axes.scatter(x, y, alpha=a)
-                         for x, y, a in zip(col, row, alpha)]
+                         for x, y, a, s in zip(col, row, alpha, sizes)]
     axes.drawn_points = points_collection
 
 
 def update_points(axes):
+    size = plt.rcParams['lines.markersize'] ** 2
     pln = axes.points[0]
+    distance = np.abs(pln - axes.index)
+    distance_nonlin = np.clip(distance - 0.5, 0, axes.pts_depth - 0.5)
+    apparent_position = (np.sign(pln - axes.index) * distance_nonlin /
+                         axes.pts_depth)  # between -1 and 1
+    sizes = size * (1 + apparent_position**3)
     alpha = np.maximum(0, 1 - np.abs(pln - axes.index) / axes.pts_depth)
-    for pt, a in zip(axes.drawn_points, alpha):
+    for pt, a, s in zip(axes.drawn_points, alpha, sizes):
         pt.set_alpha(a)
+        pt.set_sizes([s])
 
 
 KEYMAP = {
