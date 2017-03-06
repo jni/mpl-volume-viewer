@@ -35,8 +35,9 @@ def _toggle_overlay(event, fig, ax):
 def process_key(event):
     fig = event.canvas.figure
     ax = event.inaxes or fig.axes[0]
-    f = KEYMAP[event.key]
-    f(event, fig, ax)
+    if event.key in KEYMAP:
+        f = KEYMAP[event.key]
+        f(event, fig, ax)
     fig.canvas.draw()
 
 
