@@ -2,8 +2,6 @@ import numpy as np
 from matplotlib import pyplot as plt
 
 
-
-
 def _random_cmap(n=256):
     # to do: make this really map random colours
     return plt.cm.Spectral(n)
@@ -39,6 +37,43 @@ def process_key(event):
         f = KEYMAP[event.key]
         f(event, fig, ax)
     fig.canvas.draw()
+
+
+def _normalize_fig_axes(fig, axes):
+    if fig is None and axes is not None:
+        fig = axes.ravel()[0].figure
+    if fig is None:
+        fig = plt.figure('Slice Viewer')
+    if axes is None:
+        ax0 = fig.add_subplot(221)
+        ax1 = fig.add_subplot(223, sharex=ax0)
+        ax2 = fig.add_subplot(222, sharey=ax0, sharex=ax1.yaxis)
+        axes = np.array([ax0, ax1, ax2])
+    return fig, axes
+
+
+class SliceViewer:
+    def __init__(self, volume, spacing=None, cmap=plt.cm.gray,
+                 points=None, pts_depth=2, pts_color='red',
+                 labels=None, labels_cmap='random', multichannel=False,
+                 fig=None, axes=None):
+        if spacing is None:
+            spacing = np.ones((3,))
+        remove_keymap_conflicts()
+        self.fig, self.axes = _normalize_fig_axes(fig, axes)
+        self.raxes = self.axes.T.ravel()
+        self.raxes[-1].set_axis_off()
+        self.volume = volume
+        self.points = points
+        self.index = np.array(volume.shape[:3]) // 2
+        # aspect is pixel height over pixel width
+        self.raxes[0].imshow(volume[self.index[0], :, :],
+                             aspect=spacing[1] / spacing[2])
+        self.raxes[1].imshow(volume[:, self.index[1], :],
+                             aspect=spacing[0] / spacing[2])
+        self.raxes[2].imshow(volume[:, :, self.index[2]].swapaxes(0, 1),
+                             aspect=spacing[1] / spacing[0])
+        self.fig.canvas.mpl_connect('key_press_event', process_key)
 
 
 def slice_view(volume, cmap=plt.cm.gray,
