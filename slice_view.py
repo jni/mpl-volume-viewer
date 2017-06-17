@@ -47,8 +47,9 @@ def _normalize_fig_axes(fig, axes):
     if axes is None:
         ax0 = fig.add_subplot(221)
         ax1 = fig.add_subplot(223, sharex=ax0)
-        ax2 = fig.add_subplot(222, sharey=ax0, sharex=ax1.yaxis)
-        axes = np.array([ax0, ax1, ax2])
+        ax2 = fig.add_subplot(222, sharey=ax0)
+        ax3 = fig.add_subplot(224)
+        axes = np.array([ax0, ax1, ax2, ax3])
     return fig, axes
 
 
@@ -60,6 +61,7 @@ class SliceViewer:
         if spacing is None:
             spacing = np.ones((3,))
         remove_keymap_conflicts()
+        self.updating = False
         self.fig, self.axes = _normalize_fig_axes(fig, axes)
         self.raxes = self.axes.T.ravel()
         self.raxes[-1].set_axis_off()
@@ -74,6 +76,25 @@ class SliceViewer:
         self.raxes[2].imshow(volume[:, :, self.index[2]].swapaxes(0, 1),
                              aspect=spacing[1] / spacing[0])
         self.fig.canvas.mpl_connect('key_press_event', process_key)
+        for ax in self.raxes:
+            ax.set_autoscale_on(False)
+        self.raxes[1].callbacks.connect('ylim_changed', self.ax_update)
+        self.raxes[2].callbacks.connect('xlim_changed', self.ax_update)
+
+    def ax_update(self, ax):
+        if ax is self.raxes[0] or self.updating:
+            return  # do nothing with main view, handled by sharex/sharey
+        # Keep track of state so that we don't go back
+        # and forth with each axis updating the other
+        self.updating = True
+        if ax is self.raxes[1]:
+            plim = ax.get_ylim()
+            self.raxes[2].set_xlim(*plim[::-1])
+        elif ax is self.raxes[2]:
+            plim = ax.get_xlim()
+            self.raxes[1].set_ylim(*plim[::-1])
+        self.updating = False
+        ax.figure.canvas.draw_idle()
 
 
 def slice_view(volume, cmap=plt.cm.gray,
