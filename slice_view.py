@@ -7,19 +7,17 @@ def _random_cmap(n=256):
     return plt.cm.Spectral(n)
 
 
-def _dscroll(event, fig, ax):
+def _dscroll(event, viewer):
+    fig = viewer.figure
+    ax = event.inaxes or fig.axes[0]
+    dim = np.where(ax == viewer.raxes)[0][0]
     key = event.key
-    volume = ax.volume
+    shift = np.zeros(3, dtype=int)
     if key == 'down' or key == 'j':
-        shift = -1
+        shift[dim] = -1
     elif key == 'up' or key == 'k':
-        shift = 1
-    ax.index = (ax.index + shift) % volume.shape[0]
-    ax.images[0].set_array(volume[ax.index])
-    if hasattr(ax, 'overlay'):
-        ax.images[1].set_array(ax.overlay[ax.index])
-    if ax.points is not None:
-        update_points(ax)
+        shift[dim] = 1
+    viewer.set_viewpoint(viewer.index + shift)
 
 
 def _toggle_overlay(event, fig, ax):
@@ -50,6 +48,8 @@ def _normalize_fig_axes(fig, axes):
         ax2 = fig.add_subplot(222, sharey=ax0)
         ax3 = fig.add_subplot(224)
         axes = np.array([ax0, ax1, ax2, ax3])
+    for i, ax in enumerate(axes.ravel()):
+        ax.dim = i
     return fig, axes
 
 
@@ -62,10 +62,11 @@ class SliceViewer:
             spacing = np.ones((3,))
         remove_keymap_conflicts()
         self.updating = False
-        self.fig, self.axes = _normalize_fig_axes(fig, axes)
+        self.figure, self.axes = _normalize_fig_axes(fig, axes)
         self.raxes = self.axes.T.ravel()
         self.raxes[-1].set_axis_off()
         self.volume = volume
+        self.overlay = labels
         self.points = points
         self.index = np.array(volume.shape[:3]) // 2
         # aspect is pixel height over pixel width
@@ -75,7 +76,7 @@ class SliceViewer:
                              aspect=spacing[0] / spacing[2])
         self.raxes[2].imshow(volume[:, :, self.index[2]].swapaxes(0, 1),
                              aspect=spacing[1] / spacing[0])
-        self.fig.canvas.mpl_connect('key_press_event', process_key)
+        self.figure.canvas.mpl_connect('key_press_event', self.process_key)
         for ax in self.raxes:
             ax.set_autoscale_on(False)
         self.raxes[1].callbacks.connect('ylim_changed', self.ax_update)
@@ -95,6 +96,30 @@ class SliceViewer:
             self.raxes[1].set_ylim(*plim[::-1])
         self.updating = False
         ax.figure.canvas.draw_idle()
+
+    def process_key(self, event):
+        fig = event.canvas.figure
+        ax = event.inaxes or fig.axes[0]
+        if event.key in KEYMAP:
+            f = KEYMAP[event.key]
+            f(event, self)
+        fig.canvas.draw()
+
+    def set_viewpoint(self, point):
+        self.index[:] = point
+        for dim in range(3):
+            ax = self.raxes[dim]
+            idx = [slice(None)] * 3
+            idx[dim] = point[dim]
+            image = self.volume[idx]
+            if dim == 2:
+                image = image.swapaxes(0, 1)
+            ax.images[0].set_array(image)
+            if self.overlay is not None:
+                ax.images[1].set_array(ax.overlay[ax.index])
+            #if ax.points is not None:
+            #    self.update_points(ax)
+        self.figure.canvas.draw_idle()
 
 
 def slice_view(volume, cmap=plt.cm.gray,
