@@ -28,15 +28,6 @@ def _toggle_overlay(event, fig, ax):
         ax.old_alpha = temp
 
 
-def process_key(event):
-    fig = event.canvas.figure
-    ax = event.inaxes or fig.axes[0]
-    if event.key in KEYMAP:
-        f = KEYMAP[event.key]
-        f(event, fig, ax)
-    fig.canvas.draw()
-
-
 def _normalize_fig_axes(fig, axes):
     if fig is None and axes is not None:
         fig = axes.ravel()[0].figure
@@ -77,6 +68,8 @@ class SliceViewer:
         self.raxes[2].imshow(volume[:, :, self.index[2]].swapaxes(0, 1),
                              aspect=spacing[1] / spacing[0])
         self.figure.canvas.mpl_connect('key_press_event', self.process_key)
+        self.figure.canvas.mpl_connect('button_press_event',
+                                       self.process_mouse_button)
         for ax in self.raxes:
             ax.set_autoscale_on(False)
         self.raxes[1].callbacks.connect('ylim_changed', self.ax_update)
@@ -104,6 +97,17 @@ class SliceViewer:
             f = KEYMAP[event.key]
             f(event, self)
         fig.canvas.draw()
+
+    def process_mouse_button(self, event):
+        ax = event.inaxes
+        if ax is not None and event.button == 1:
+            dim = np.where(ax == self.raxes)[0][0]
+            point = ([event.ydata, event.xdata] if dim != 2
+                     else [event.xdata, event.ydata])
+            final_dim = self.index[dim]
+            point.insert(dim, final_dim)
+            point = [int(round(i)) for i in point]
+            self.set_viewpoint(point)
 
     def set_viewpoint(self, point):
         self.index[:] = point
