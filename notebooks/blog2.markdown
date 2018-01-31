@@ -52,14 +52,14 @@ Ok, now that we're done with that warning, let's throw out the orientation infor
 scales = np.abs(raw_scales)
 ```
 
-Finally, in NumPy, it is more convenient to have the leading dimension be the anisotropic one (the one with the different scale). (In Matlab, the opposite is true.) Therefore, let's invert the axis order and the scales order:
+Finally, in NumPy, it is more convenient to have the leading dimension be the anisotropic one (the one with the different scale). (In Matlab, the opposite is true.) Therefore, let's transpose the last axis to be in the leading position:
 
 ```python
-scales = scales[::-1]
-struct_arr = np.transpose(struct_arr)
+scales = scales[[2, 0, 1]]
+struct_arr = np.transpose(struct_arr, [2, 0, 1])
 ```
 
-Now we have everything we need for our orthogonal plot. The key is to decide on a slice to take along each axis, and then plot the remaining to axes on a Matplotlib... um... axis. This post is going to be fun, I can tell.
+Now we have everything we need for our orthogonal plot. The key is to decide on a slice to take along each axis, and then plot the remaining to axes on a Matplotlib... um... axis. This post is going to be fun, I can tell. Anyway, we'll start with the central plane along each axis:
 
 ```python
 fig, ax = plt.subplots(nrows=2, ncols=2)
@@ -69,4 +69,10 @@ center = np.array(struct_arr.shape // 2)
 ax[0, 0].imshow(struct_arr[center[0]], aspect=scales[1]/scales[2])
 ax[1, 0].imshow(struct_arr[center[1]], aspect=scales[0]/scales[2])
 ax[0, 1].imshow(struct_arr[center[2]], aspect=scales[0]/scales[1])
+```
+
+Let's add some horizontal lines to make it a bit clearer what's going on:
+
+```python
+ax[0, 0].hlines(center[1], 0, struct_arr.shape[2])
 ```
