@@ -110,6 +110,7 @@ class SliceViewer:
             self.set_viewpoint(point)
 
     def set_viewpoint(self, point):
+        point = np.asarray(point) % self.volume.shape
         self.index[:] = point
         for dim in range(3):
             ax = self.raxes[dim]
