@@ -115,7 +115,7 @@ class SliceViewer:
             ax = self.raxes[dim]
             idx = [slice(None)] * 3
             idx[dim] = point[dim]
-            image = self.volume[idx]
+            image = self.volume[tuple(idx)]
             if dim == 2:
                 image = image.swapaxes(0, 1)
             ax.images[0].set_array(image)
