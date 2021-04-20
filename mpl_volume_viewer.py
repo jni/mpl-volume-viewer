@@ -17,7 +17,7 @@ def _dscroll(event, viewer):
         shift[dim] = -1
     elif key == 'up' or key == 'k':
         shift[dim] = 1
-    viewer.set_viewpoint(viewer.index + shift)
+    viewer.set_viewpoint(viewer.index + shift, dim)
 
 
 def _toggle_overlay(event, fig, ax):
@@ -107,23 +107,22 @@ class SliceViewer:
             final_dim = self.index[dim]
             point.insert(dim, final_dim)
             point = [int(round(i)) for i in point]
-            self.set_viewpoint(point)
+            self.set_viewpoint(point, dim)
 
-    def set_viewpoint(self, point):
+    def set_viewpoint(self, point, dim):
         point = np.asarray(point) % self.volume.shape
         self.index[:] = point
-        for dim in range(3):
-            ax = self.raxes[dim]
-            idx = [slice(None)] * 3
-            idx[dim] = point[dim]
-            image = self.volume[tuple(idx)]
-            if dim == 2:
-                image = image.swapaxes(0, 1)
-            ax.images[0].set_array(image)
-            if self.overlay is not None:
-                ax.images[1].set_array(ax.overlay[ax.index])
-            #if ax.points is not None:
-            #    self.update_points(ax)
+        ax = self.raxes[dim]
+        idx = [slice(None)] * 3
+        idx[dim] = point[dim]
+        image = self.volume[tuple(idx)]
+        if dim == 2:
+            image = image.swapaxes(0, 1)
+        ax.images[0].set_array(image)
+        if self.overlay is not None:
+            ax.images[1].set_array(ax.overlay[ax.index])
+        #if ax.points is not None:
+        #    self.update_points(ax)
         self.figure.canvas.draw_idle()
 
 
