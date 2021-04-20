@@ -20,8 +20,10 @@ def _dscroll(event, viewer):
     viewer.set_viewpoint(viewer.index + shift)
 
 
-def _toggle_overlay(event, fig, ax):
-    if ax.overlay is not None:
+def _toggle_overlay(event, viewer):
+    if viewer.overlay is not None:
+        fig = viewer.figure
+        ax = event.inaxes or fig.axes[0]
         ax = ax.images[1]
         temp = ax.get_alpha()
         ax.set_alpha(ax.old_alpha)
