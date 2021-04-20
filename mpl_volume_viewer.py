@@ -47,7 +47,7 @@ def _normalize_fig_axes(fig, axes):
 class SliceViewer:
     def __init__(self, volume, spacing=None, cmap=plt.cm.gray,
                  points=None, pts_depth=2, pts_color='red',
-                 labels=None, labels_cmap='random', multichannel=False,
+                 labels=None, labels_cmap=None, multichannel=False,
                  fig=None, axes=None):
         if spacing is None:
             spacing = np.ones((3,))
@@ -61,11 +61,11 @@ class SliceViewer:
         self.points = points
         self.index = np.array(volume.shape[:3]) // 2
         # aspect is pixel height over pixel width
-        self.raxes[0].imshow(volume[self.index[0], :, :],
+        self.raxes[0].imshow(volume[self.index[0], :, :], labels_cmap,
                              aspect=spacing[1] / spacing[2])
-        self.raxes[1].imshow(volume[:, self.index[1], :],
+        self.raxes[1].imshow(volume[:, self.index[1], :], labels_cmap,
                              aspect=spacing[0] / spacing[2])
-        self.raxes[2].imshow(volume[:, :, self.index[2]].swapaxes(0, 1),
+        self.raxes[2].imshow(volume[:, :, self.index[2]].swapaxes(0, 1), labels_cmap,
                              aspect=spacing[1] / spacing[0])
         self.figure.canvas.mpl_connect('key_press_event', self.process_key)
         self.figure.canvas.mpl_connect('button_press_event',
