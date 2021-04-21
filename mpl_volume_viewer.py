@@ -11,6 +11,8 @@ def _dscroll(event, viewer):
     fig = viewer.figure
     ax = event.inaxes or fig.axes[0]
     dim = np.where(ax == viewer.raxes)[0][0]
+    if dim not in {0, 1, 2}:
+        return
     key = event.key
     shift = np.zeros(3, dtype=int)
     if key == 'down' or key == 'j':
@@ -102,6 +104,8 @@ class SliceViewer:
         ax = event.inaxes
         if ax is not None and event.button == 1:
             dim = np.where(ax == self.raxes)[0][0]
+            if dim not in {0, 1, 2}:
+                return
             point = ([event.ydata, event.xdata] if dim != 2
                      else [event.xdata, event.ydata])
             final_dim = self.index[dim]
