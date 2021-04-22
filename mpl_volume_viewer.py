@@ -98,7 +98,6 @@ class SliceViewer:
         if event.key in KEYMAP:
             f = KEYMAP[event.key]
             f(event, self)
-        fig.canvas.draw()
 
     def process_mouse_button(self, event):
         ax = event.inaxes
