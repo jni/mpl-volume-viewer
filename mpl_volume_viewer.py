@@ -107,9 +107,9 @@ class SliceViewer:
             final_dim = self.index[dim]
             point.insert(dim, final_dim)
             point = [int(round(i)) for i in point]
-            self.set_viewpoint(point, [1,2] if dim == 0 else [0,2] if dim == 1 else [0,1] if dim == 2)
+            self.set_viewpoint(point, list({0, 1, 2} - {dim}))
 
-    def set_viewpoint(self, point, dims = None):
+    def set_viewpoint(self, point, dims=range(3)):
         point = np.asarray(point) % self.volume.shape
         self.index[:] = point
         for dim in dims:
