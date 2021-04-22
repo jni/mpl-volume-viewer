@@ -19,7 +19,7 @@ def _dscroll(event, viewer):
         shift[dim] = -1
     elif key == 'up' or key == 'k':
         shift[dim] = 1
-    viewer.set_viewpoint(viewer.index + shift)
+    viewer.set_viewpoint(viewer.index + shift, [dim])
 
 
 def _toggle_overlay(event, fig, ax):
@@ -111,12 +111,12 @@ class SliceViewer:
             final_dim = self.index[dim]
             point.insert(dim, final_dim)
             point = [int(round(i)) for i in point]
-            self.set_viewpoint(point)
+            self.set_viewpoint(point, list({0, 1, 2} - {dim}))
 
-    def set_viewpoint(self, point):
+    def set_viewpoint(self, point, dims=range(3)):
         point = np.asarray(point) % self.volume.shape
         self.index[:] = point
-        for dim in range(3):
+        for dim in dims:
             ax = self.raxes[dim]
             idx = [slice(None)] * 3
             idx[dim] = point[dim]
