@@ -63,11 +63,11 @@ class SliceViewer:
         self.points = points
         self.index = np.array(volume.shape[:3]) // 2
         # aspect is pixel height over pixel width
-        self.raxes[0].imshow(volume[self.index[0], :, :],
+        self.raxes[0].imshow(volume[self.index[0], :, :], cmap,
                              aspect=spacing[1] / spacing[2])
-        self.raxes[1].imshow(volume[:, self.index[1], :],
+        self.raxes[1].imshow(volume[:, self.index[1], :], cmap,
                              aspect=spacing[0] / spacing[2])
-        self.raxes[2].imshow(volume[:, :, self.index[2]].swapaxes(0, 1),
+        self.raxes[2].imshow(volume[:, :, self.index[2]].swapaxes(0, 1), cmap,
                              aspect=spacing[1] / spacing[0])
         self.figure.canvas.mpl_connect('key_press_event', self.process_key)
         self.figure.canvas.mpl_connect('button_press_event',
@@ -139,7 +139,7 @@ def slice_view(volume, cmap=plt.cm.gray,
     ax.volume = volume
     ax.points = None
     ax.index = volume.shape[0] // 2
-    ax.imshow(volume[ax.index], cmap=cmap)
+    ax.imshow(volume[ax.index], cmap)
     if points is not None:
         ax.points = points.T
         ax.pts_depth = pts_depth
