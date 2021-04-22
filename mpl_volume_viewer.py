@@ -22,12 +22,13 @@ def _dscroll(event, viewer):
     viewer.set_viewpoint(viewer.index + shift, [dim])
 
 
-def _toggle_overlay(event, fig, ax):
-    if ax.overlay is not None:
+def _toggle_overlay(event, viewer):
+    if viewer.overlay is not None:
+        fig = viewer.figure
+        ax = event.inaxes or fig.axes[0]
         ax = ax.images[1]
-        temp = ax.get_alpha()
-        ax.set_alpha(ax.old_alpha)
-        ax.old_alpha = temp
+        ax.set_alpha(0 if ax.get_alpha() > 0 else viewer.alpha)
+        ax.figure.canvas.draw_idle()
 
 
 def _normalize_fig_axes(fig, axes):
@@ -60,6 +61,7 @@ class SliceViewer:
         self.raxes[-1].set_axis_off()
         self.volume = volume
         self.overlay = labels
+        self.alpha = 0.8
         self.points = points
         self.index = np.array(volume.shape[:3]) // 2
         # aspect is pixel height over pixel width
@@ -69,6 +71,13 @@ class SliceViewer:
                              aspect=spacing[0] / spacing[2])
         self.raxes[2].imshow(volume[:, :, self.index[2]].swapaxes(0, 1), cmap,
                              aspect=spacing[1] / spacing[0])
+        if self.overlay is not None:
+            self.raxes[0].imshow(self.overlay[self.index[0], :, :],
+                                 aspect=spacing[1] / spacing[2], alpha=0)
+            self.raxes[1].imshow(self.overlay[:, self.index[1], :],
+                                 aspect=spacing[0] / spacing[2], alpha=0)
+            self.raxes[2].imshow(self.overlay[:, :, self.index[2]].swapaxes(0, 1),
+                                 aspect=spacing[1] / spacing[0], alpha=0)
         self.figure.canvas.mpl_connect('key_press_event', self.process_key)
         self.figure.canvas.mpl_connect('button_press_event',
                                        self.process_mouse_button)
@@ -124,7 +133,7 @@ class SliceViewer:
                 image = image.swapaxes(0, 1)
             ax.images[0].set_array(image)
             if self.overlay is not None:
-                ax.images[1].set_array(ax.overlay[ax.index])
+                ax.images[1].set_array(self.overlay[point])
             #if ax.points is not None:
             #    self.update_points(ax)
         self.figure.canvas.draw_idle()
